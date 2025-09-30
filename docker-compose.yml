@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  patroni:
+    image: registry.aldebaranode.xyz/patroni:main
+    container_name: patroni
+    restart: unless-stopped
+    environment:
+      - PATRONI_NAME=${PATRONI_NAME}
+      - PATRONI_SCOPE=postgres
+      - PATRONI_ETCD3_HOSTS=${ETCD_HOSTS}
+      - PATRONI_RESTAPI_LISTEN=0.0.0.0:8008
+      - PATRONI_RESTAPI_CONNECT_ADDRESS=${PATRONI_HOST}:8008
+      - PATRONI_POSTGRESQL_LISTEN=0.0.0.0:5432
+      - PATRONI_POSTGRESQL_CONNECT_ADDRESS=${PATRONI_HOST}:5432
+      - PATRONI_POSTGRESQL_DATA_DIR=/home/postgres/data
+      - PATRONI_SUPERUSER_USERNAME=postgres
+      - PATRONI_SUPERUSER_PASSWORD=postgres
+      - PATRONI_REPLICATION_USERNAME=replicator
+      - PATRONI_REPLICATION_PASSWORD=replicate
+    volumes:
+      - ./patroni.yml:/config/patroni.yml
+      - ./pgdata:/home/postgres/data
+    ports:
+      - "5432:5432"
+      - "8008:8008"
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: pgbouncer
+    restart: unless-stopped
+    volumes:
+      - ./pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini
+      - ./userlist.txt:/etc/pgbouncer/userlist.txt
+    ports:
+      - "6432:6432"
+    depends_on:
+      - patroni

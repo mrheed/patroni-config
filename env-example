@@ -1,0 +1,4 @@
+# Patroni configuration
+PATRONI_NAME=db_index
+PATRONI_HOST=host-1
+ETCD_HOSTS=host-1:2379,host-2:2379,host-3:2379
