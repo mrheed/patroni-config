@@ -1,3 +1,4 @@
+
 bootstrap:
   dcs:
     ttl: 30
@@ -12,30 +13,30 @@ bootstrap:
       - host replication replicator 0.0.0.0/0 md5
       - host all all 0.0.0.0/0 md5
       parameters:
-        # Connection settings
-        max_connections: 500
-        superuser_reserved_connections: 10
+        # Connection settings - realistic for 16GB RAM
+        max_connections: 600
+        superuser_reserved_connections: 20
         
-        # Memory - aggressive for blockchain data
-        shared_buffers: 16GB
-        work_mem: 32MB
-        maintenance_work_mem: 2GB
-        effective_cache_size: 48GB
+        # Memory - fits 16GB RAM
+        shared_buffers: 4GB
+        work_mem: 16MB
+        maintenance_work_mem: 512MB
+        effective_cache_size: 12GB
         
-        # WAL - critical for high write throughput
-        wal_buffers: 64MB
-        min_wal_size: 4GB
-        max_wal_size: 16GB
-        checkpoint_timeout: 30min
+        # WAL settings
+        wal_buffers: 16MB
+        min_wal_size: 2GB
+        max_wal_size: 8GB
+        checkpoint_timeout: 15min
         checkpoint_completion_target: 0.9
         wal_compression: on
         
         # Replication
         max_wal_senders: 10
-        wal_keep_size: 8GB
+        wal_keep_size: 4GB
         max_replication_slots: 10
         
-        # Durability - blockchain indexing specific
+        # Durability - blockchain indexing
         synchronous_commit: off
         wal_writer_delay: 200ms
         commit_delay: 100
@@ -45,18 +46,23 @@ bootstrap:
         random_page_cost: 1.1
         effective_io_concurrency: 200
         
-        # Parallelism - aggressive for complex queries
-        max_worker_processes: 32
-        max_parallel_workers: 24
-        max_parallel_workers_per_gather: 8
-        max_parallel_maintenance_workers: 4
+        # Parallelism
+        max_worker_processes: 16
+        max_parallel_workers: 8
+        max_parallel_workers_per_gather: 4
+        max_parallel_maintenance_workers: 2
         parallel_leader_participation: on
         
         # Performance
         jit: on
         jit_above_cost: 100000
+        jit_optimize_above_cost: 500000
         
-        # Logging - minimal for 100k queries
+        # Auto-cleanup - CRITICAL
+        idle_in_transaction_session_timeout: 30000
+        statement_timeout: 60000
+        
+        # Logging
         logging_collector: on
         log_min_duration_statement: 5000
         log_checkpoints: on
@@ -66,17 +72,20 @@ bootstrap:
         log_temp_files: 100MB
         log_autovacuum_min_duration: 1000
         
-        # Autovacuum - critical for blockchain indexing
-        autovacuum_max_workers: 6
+        # Autovacuum
+        autovacuum_max_workers: 4
         autovacuum_naptime: 10s
-        autovacuum_vacuum_cost_limit: 2000
+        autovacuum_vacuum_cost_limit: 1000
         autovacuum_vacuum_scale_factor: 0.05
         autovacuum_analyze_scale_factor: 0.02
         
   initdb:
     - encoding: UTF8
     - data-checksums
+
 postgresql:
+  listen: 0.0.0.0:5432
+  data_dir: /home/postgres/data
   bin_dir: /usr/lib/postgresql/17/bin
   authentication:
     superuser:
